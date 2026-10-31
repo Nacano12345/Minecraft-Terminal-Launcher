@@ -1,0 +1,30 @@
+name = "bmclapi"
+version = "1.0.0"
+api = 1
+description = "BMCLAPI mirrors for libraries and assets (mainland China)"
+
+# Note: version JSON / client jar mirroring needs path pattern rewriting
+# (`/v1/packages/<sha>/<id>.json` -> `/version/<id>/json`), which is planned
+# for the L2 plugin API. Only pure prefix rewrites are supported here.
+
+[[providers]]
+kind = "mirror"
+priority = 100
+
+[providers.match]
+host = "libraries.minecraft.net"
+
+[providers.replace]
+with = "https://bmclapi2.bangbang93.com"
+path_prefix = "/maven"
+
+[[providers]]
+kind = "mirror"
+priority = 100
+
+[providers.match]
+host = "resources.download.minecraft.net"
+
+[providers.replace]
+with = "https://bmclapi2.bangbang93.com"
+path_prefix = "/assets"

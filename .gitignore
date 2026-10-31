@@ -1,0 +1,37 @@
+# build
+target/
+dist/
+build/
+out/
+
+# deps
+node_modules/
+vendor/
+
+# launcher data when running with --root .
+runtime/
+.minecraft/
+instances/
+logs/
+assets/
+libraries/
+versions/
+settings.json
+plugins/state.json
+*.log
+
+# local config
+.env
+*.local.toml
+config.local.toml
+
+# editor / os
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# scratch
+tmp/
+*.tmp

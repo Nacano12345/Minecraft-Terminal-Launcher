@@ -1,0 +1,50 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/mc-core",
+    "crates/mc-ipc",
+    "crates/mc-plugin",
+    "crates/mc-manager",
+    "crates/mc-wrapper",
+    "crates/mc-tui",
+    "crates/mc-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+authors = ["QCL Contributors"]
+repository = "https://github.com/Nacano12345/Minecraft-Terminal-Launcher"
+
+[workspace.dependencies]
+mc-core = { path = "crates/mc-core" }
+mc-ipc = { path = "crates/mc-ipc" }
+mc-plugin = { path = "crates/mc-plugin" }
+mc-manager = { path = "crates/mc-manager" }
+mc-wrapper = { path = "crates/mc-wrapper" }
+mc-tui = { path = "crates/mc-tui" }
+
+anyhow = "1"
+thiserror = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "process", "io-util", "fs", "sync", "time", "signal"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+clap = { version = "4", features = ["derive", "env"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+sha1 = "0.10"
+hex = "0.4"
+futures = "0.3"
+toml = "0.8"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+md5 = "0.7"
+url = "2"
+ratatui = "0.29"
+
+[profile.release]
+lto = "thin"
+strip = true
+opt-level = "z"
+panic = "abort"

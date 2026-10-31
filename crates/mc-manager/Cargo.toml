@@ -1,0 +1,19 @@
+[package]
+name = "mc-manager"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+mc-core.workspace = true
+mc-plugin.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+reqwest.workspace = true
+tokio.workspace = true
+futures.workspace = true
+sha1.workspace = true
+hex.workspace = true
+zip.workspace = true
+md5.workspace = true
+tracing.workspace = true
