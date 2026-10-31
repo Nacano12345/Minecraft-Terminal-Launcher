@@ -1,70 +1,75 @@
 # QuarkCraftLauncher (QCL)
 
-终端优先的 Minecraft 启动器。三栏 TUI、可编辑启动命令、插件系统，单文件分发。
+A terminal-first Minecraft launcher. Three-pane TUI, editable launch command, plugin system, single-binary distribution.
 
 [![CI](https://github.com/Nacano12345/Minecraft-Terminal-Launcher/actions/workflows/ci.yml/badge.svg)](https://github.com/Nacano12345/Minecraft-Terminal-Launcher/actions/workflows/ci.yml)
 
-- 仓库：<https://github.com/Nacano12345/Minecraft-Terminal-Launcher>
-- 状态：v0.0_Alpha · M0–M3 完成，插件 L1 完成
-- 技术栈：Rust 2021 · tokio · reqwest · ratatui · 单二进制（release 约 5 MB）
+- Repository: <https://github.com/Nacano12345/Minecraft-Terminal-Launcher>
+- Status: v0.0_Alpha · M0–M3 complete, plugin L1 complete
+- Stack: Rust 2021 · tokio · reqwest · ratatui · single binary (release ~5 MB)
 
 ---
 
-## 构建要求
+## Requirements
 
-- Rust stable（`rust-toolchain.toml` 已固定）
-- JDK 17+（1.20.1 需要 17，1.20.5+ 需要 21；目前只检测，自动下载在计划中）
+- Rust stable (pinned by `rust-toolchain.toml`)
+- JDK 17+ (17 for 1.20.1, 21 for 1.20.5+; currently detected only, auto-download planned)
 - Linux / macOS / Windows
 
 ---
 
-## 快速开始
+## Quick start
 
 ```bash
 cargo build --release
 
-# 看版本
+# List versions
 ./target/release/qcl list --limit 10
 
-# 下载（客户端 jar + 依赖 + assets）
+# Download (client jar + libraries + assets)
 ./target/release/qcl install 1.20.1
 
-# 只看启动命令，不真的启动
+# Print the launch command without starting the game
 ./target/release/qcl run 1.20.1 --dry-run
 
-# 离线模式启动
+# Offline launch
 ./target/release/qcl run 1.20.1 --username Steve --memory 4096
 
-# 机器可读事件流
+# Machine-readable event stream
 ./target/release/qcl run 1.20.1 --json | jq .
 
-# 终端界面
+# Terminal UI
 ./target/release/qcl tui --username Steve --memory 4096
 ```
 
-### TUI 快捷键
+### TUI keys
 
-| 按键 | 作用 |
+| Key | Action |
 |---|---|
-| `j` / `k` / `↑` / `↓` | 选择版本 |
-| `g` / `G` | 第一个 / 最后一个 |
-| `/` | 过滤版本（`Esc` 清空） |
-| `Enter` / `l` | 启动选中版本（自动补全依赖） |
-| `i` | 只安装不启动 |
-| `Tab` / `e` | 聚焦左下角可编辑的 cmdline |
-| 编辑中 | 直接输入；`Enter` 运行这条命令；`Esc` 返回 |
-| `Ctrl+R` | 按当前版本重建 cmdline |
-| `Ctrl+U` | 清空 cmdline |
-| `s` | 停止当前游戏 |
-| `PgUp` / `PgDn` / `f` | 日志翻页 / 回到尾部 |
-| `r` | 重新拉取版本列表 |
-| `?` | 帮助 |
-| `Esc` | 打开 QCL 顶层菜单 |
-| `q` / `Ctrl+C` | 退出（会结束游戏进程） |
+| `j` / `k` / `↑` / `↓` | Move selection |
+| `g` / `G` | First / last |
+| `/` | Filter versions (`Esc` clears) |
+| `Enter` / `l` | Launch selected version (installs missing files) |
+| `i` | Install without launching |
+| `Tab` / `e` | Focus the editable cmdline pane |
+| Editing | Type to edit; `Enter` runs the command; `Esc` leaves |
+| `Ctrl+R` | Rebuild the cmdline for the selected version |
+| `Ctrl+U` | Clear the cmdline |
+| `s` | Stop the running game |
+| `PgUp` / `PgDn` / `f` | Scroll logs / follow tail |
+| `r` | Reload the version list |
+| `?` | Help |
+| `Esc` | Open the QCL top-level menu |
+| `q` / `Ctrl+C` | Quit (stops the game process) |
+| Left click | Select a version; double-click to launch |
+| Wheel | Scroll the version list or logs |
+| Click log pane | Resume following the tail |
+| Click bottom bar | `launch` / `install` / `filter` / `stop` / `help` / `quit` (fixed right-aligned positions) |
+| `Shift` + drag | Native terminal text selection (mouse reporting captures plain drag) |
 
-> TUI 模式下 tracing 日志写到 `<root>/logs/qcl.log`（stderr 是备用屏，直接输出会把界面冲花）。
+> In TUI mode, tracing logs are written to `<root>/logs/qcl.log`. stderr is the alternate screen, so writing there would corrupt the UI.
 
-### 三栏布局
+### Three-pane layout
 
 ```
 ┌ VersionTable ──────────────┐┌ logs ────────────────────────────────────┐
@@ -75,15 +80,15 @@ cargo build --release
 └────────────────────────────┘└──────────────────────────────────────────┘
 ```
 
-- 左上 `VersionTable`：版本列表（`/` 过滤，鼠标/键盘选择）
-- 左下 `cmdline`：选中版本自动生成的启动命令，不触发下载；可编辑
-- 右侧 `logs`：实时日志
+- **VersionTable** (top left): version list; `/` filters, mouse or keyboard selects
+- **cmdline** (bottom left): launch command generated for the selected version, no download triggered; editable
+- **logs** (right): live game output
 
-编辑后的命令会先补齐选中版本的依赖，再按你改写的 argv 直接 spawn；`Enter` 运行，`Esc` 退出编辑。
+An edited command installs the selected version's dependencies first, then spawns your argv verbatim. `Enter` runs it; `Esc` leaves editing.
 
-### 顶层菜单
+### Top-level menu
 
-`Esc`（或点底栏 `[Esc] menu`）弹出居中菜单，包含 ASCII QCL logo 和三个选项：
+`Esc` (or the `[Esc] menu` button in the bottom bar) opens a centered menu with the ASCII QCL logo and four items:
 
 ```
    ██████   ██████  ██
@@ -99,16 +104,17 @@ cargo build --release
           Exit
 ```
 
-打开菜单时底层界面会整体压暗（`DIM` + 前景/背景降色），菜单本身保持原亮度。
+Opening the menu dims the background (`DIM` plus darker foreground/background colors); the menu itself stays at full brightness.
 
-- `↑/↓` 或滚轮移动，`Enter` 进入，`Esc` 返回/关闭
-- `Options`：编辑用户名、内存、Java 路径（保存到 `<root>/settings.json`）
-- `Plugins`：列出插件并开关（`[x]` / `[ ]` / `[!]`），Space/Enter 切换
-- `Exit`：退出（会结束游戏进程）
+- `↑/↓` or the wheel moves, `Enter` opens, `Esc` goes back/closes
+- **Options**: edit username, memory and Java path (saved to `<root>/settings.json`)
+- **Plugins**: list plugins and toggle them (`[x]` / `[ ]` / `[!]`); Space/Enter switches
+- **Actions**: plugin-provided actions
+- **Exit**: quit (stops the game process)
 
-### 最小终端尺寸
+### Minimum terminal size
 
-安全尺寸为 **80 x 24**（`crates/mc-tui/src/ui.rs` 里的 `MIN_WIDTH` / `MIN_HEIGHT`）。小于该尺寸时不绘制三栏界面，只在终端中央显示：
+The safe minimum is **80 x 24** (`MIN_WIDTH` / `MIN_HEIGHT` in `crates/mc-tui/src/ui.rs`). Below that, the three-pane UI is not drawn; a centered message is shown instead:
 
 ```text
         Terminal too small
@@ -119,203 +125,199 @@ cargo build --release
   Resize the window to continue.
 ```
 
-- 尺寸实时检测，拖大到 80x24 后立即恢复正常界面，无需重启
-- 过小时只响应 `q` / `Ctrl+C`，其他按键和鼠标都不会触发启动/安装
-- 缩小到最小尺寸以下会立即切回提示文字
-| 鼠标左键 | 选中版本；双击直接启动 |
-| 滚轮 | 在列表上滚动选择，在日志上翻页 |
-| 点击日志区 | 回到日志尾部（恢复跟随） |
-| 点击底栏按钮 | `launch` / `install` / `filter` / `stop` / `help` / `quit` 均可点（右对齐固定位置） |
-| `Shift` + 拖动 | 终端原生文本选择（鼠标上报会占用普通拖动） |
+- The size is checked every frame; resizing back to 80x24 restores the normal UI immediately, no restart needed
+- While too small, only `q` / `Ctrl+C` are accepted; other keys and the mouse cannot trigger installs or launches
+- Shrinking below the minimum switches back to the message immediately
 
-数据目录优先级：`--root` > `QCL_HOME` > `~/.local/share/qcl`（Linux）/ `%APPDATA%\QCL`（Windows）。
+Data directory precedence: `--root` > `QCL_HOME` > `~/.local/share/qcl` (Linux) / `%APPDATA%\QCL` (Windows).
 
-Java 查找顺序：`--java` > `QCL_JAVA` > `JAVA_HOME` > `PATH` > `<root>/java/*`。
+Java lookup order: `--java` > `QCL_JAVA` > `JAVA_HOME` > `PATH` > `<root>/java/*`.
 
 ---
 
-## 定位
+## Positioning
 
-- **显示层**：cmd.exe / bash / zsh / Windows Terminal，不依赖 GUI 框架
-- **游戏本体**：客户端仍然是 OpenGL 窗口，终端承载启动器 UI + 日志 + 控制台
-- **服务端**：完整终端体验（日志、命令输入、看门狗）
-- **非交互**：所有能力都要有 `--json` 机器可读模式，能被脚本/CI 调用
+- **Display layer**: cmd.exe / bash / zsh / Windows Terminal; no GUI framework
+- **Game client**: still an OpenGL window; the terminal hosts the launcher UI, logs and console
+- **Server**: full terminal experience (logs, console input, watchdog)
+- **Non-interactive**: every capability has a `--json` machine-readable mode for scripts and CI
 
 ---
 
-## 四模块划分
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  TUI / CLI  (前台, 可替换)                           │
-│  全屏界面  |  纯行模式  |  --json 机器模式            │
+│  TUI / CLI  (frontend, replaceable)                  │
+│  full-screen  |  line mode  |  --json                │
 └───────────────┬─────────────────────────────────────┘
-                │  JSON-RPC 2.0 (stdio 或 unix socket)
+                │  JSON-RPC 2.0 (stdio or unix socket)
 ┌───────────────▼─────────────────────────────────────┐
-│  Manager  (常驻 daemon, 唯一真相源)                  │
-│  版本解析 · 下载器 · 实例库 · Java运行时 · 认证       │
-│  配置 · LaunchPlan 组装 · 插件宿主                   │
-│         │                    ▲                      │
-│         │ spawn + LaunchPlan │ 事件流(日志/状态/退出) │
-│  ┌──────▼──────┐      ┌──────┴──────┐               │
-│  │  Wrapper A  │      │  Wrapper B  │  (每实例一个)  │
-│  └──────┬──────┘      └──────┬──────┘               │
-│         ▼                    ▼                      │
-│      java 进程            java 进程                  │
+│  Manager  (daemon, single source of truth)            │
+│  versions · downloads · instances · Java · auth       │
+│  config · LaunchPlan · plugin host                    │
+│         │                    ▲                       │
+│         │ spawn + plan       │ events (log/state/exit)│
+│  ┌──────▼──────┐      ┌──────┴──────┐                │
+│  │  Wrapper A  │      │  Wrapper B  │  (one per game)│
+│  └──────┬──────┘      └──────┬──────┘                │
+│         ▼                    ▼                       │
+│      java process        java process                │
 └─────────────────────────────────────────────────────┘
 ```
 
-### Wrapper —— java 进程宿主
+### Wrapper — java process host
 
-Manager 决定「启动什么」，Wrapper 决定「怎么启动、怎么活着、怎么死」。
+The manager decides *what* to launch; the wrapper decides *how it starts, lives and dies*.
 
-- 进程创建（绕过 shell；Windows 超长命令行走 Java 9+ `@argfile`）
-- 注入点：`-javaagent:authlib-injector`、`-Dlog4j.configurationFile`、`-Dfile.encoding`、分辨率、quickPlay 参数
-- IO 桥接：stdout/stderr 按行切分 → 时间戳 → 分级 → 上报；接受命令写入 java stdin
-- 崩溃判定：退出码、`hs_err_pid*.log`、`crash-reports/`
-- 生命周期：优雅停止 → SIGTERM → kill；Windows Job Object / Linux 进程组
-- 模式：`pipe`（客户端）/ `pty`（服务端）
+- Process creation (bypasses the shell; on Windows, long command lines use Java 9+ `@argfile`)
+- Injection points: `-javaagent:authlib-injector`, `-Dlog4j.configurationFile`, `-Dfile.encoding`, resolution, quickPlay arguments
+- IO bridge: split stdout/stderr by line → timestamp → classify → report; write commands to java stdin
+- Crash detection: exit code, `hs_err_pid*.log`, `crash-reports/`
+- Lifecycle: graceful stop → SIGTERM → kill; Windows Job Object / Linux process groups
+- Modes: `pipe` (client) / `pty` (server)
 
-### Manager —— 唯一真相源
+### Manager — single source of truth
 
-- 版本元数据缓存（`version_manifest_v2.json`，ETag 条件请求）
-- 下载器：并发、续传、SHA1 校验、镜像回退（官方 → BMCLAPI）
-- 实例注册表：独立 gameDir / JVM 参数 / 内存 / Java 路径
-- Java 运行时：系统 JDK 发现 + Mojang JRE 自动下载
-- 认证：offline / Microsoft Device Code / authlib-injector
-- 组装 `LaunchPlan`（纯数据，支持 dry-run）
-- 插件宿主
+- Version metadata cache (`version_manifest_v2.json`, ETag conditional requests)
+- Downloader: concurrency, resume, SHA-1 verification, mirror fallback (official → BMCLAPI)
+- Instance registry: isolated gameDir / JVM args / memory / Java path
+- Java runtime: system JDK discovery + Mojang JRE auto-download
+- Auth: offline / Microsoft Device Code / authlib-injector
+- Builds the `LaunchPlan` (pure data, supports dry-run)
+- Plugin host
 
-### TUI / CLI —— 可替换的壳
+### TUI / CLI — replaceable shell
 
-- 一套命令解析，三种渲染：全屏 TUI / 纯行模式 / `--json`
-- 非交互模式必须完整，可被脚本调用
+- One command parser, three renderers: full-screen TUI / line mode / `--json`
+- The non-interactive mode must be complete and scriptable
 
-### Plugin —— 两级设计
+### Plugin — two tiers
 
-| 级别 | 形式 | 状态 |
+| Tier | Form | Status |
 |---|---|---|
-| L1 声明式 | `*.toml`：下载镜像 + launch hook + TUI 贡献 | ✅ |
-| L2 逻辑 | WASM（沙箱） | ⬜ |
+| L1 declarative | `*.toml`: download mirrors + launch hooks + TUI contributions | ✅ |
+| L2 logic | WASM (sandboxed) | ⬜ |
 
-L1 已实现：
+L1 is implemented:
 
-- 扫描 `<root>/plugins/*/plugin.toml` 或 `<root>/plugins/*.toml`
-- `[[providers]]` 镜像改写，`[launch]` 追加 JVM/游戏参数和环境变量
-- `[tui]` 追加状态栏文字，注册 Actions 菜单项和单键快捷键
-- 启用状态存 `<root>/plugins/state.json`
-- CLI `qcl plugin list / info / enable / disable`
-- TUI `Esc → Plugins` 用 Space/Enter 切换
-- 无效清单（TOML 错误、api 过新、重名）会显示但不会生效
+- Scans `<root>/plugins/*/plugin.toml` or `<root>/plugins/*.toml`
+- `[[providers]]` mirror rewriting; `[launch]` appends JVM/game args and environment variables
+- `[tui]` adds status-bar text and registers Actions menu entries and single-key shortcuts
+- Enable state lives in `<root>/plugins/state.json`
+- CLI: `qcl plugin list / info / enable / disable`
+- TUI: `Esc → Plugins`, toggle with Space/Enter
+- Invalid manifests (TOML errors, unsupported api, duplicate names) are listed but never applied
 
-清单示例与完整字段见 [`docs/plugins.md`](docs/plugins.md)。
+See [`docs/plugins.md`](docs/plugins.md) for the full manifest reference.
 
-L2 权限预览：`fs:read:<glob>` / `fs:write:<glob>` / `net:<host>` / `process:spawn` / `auth:token`
+L2 permission preview: `fs:read:<glob>` / `fs:write:<glob>` / `net:<host>` / `process:spawn` / `auth:token`
 
 ---
 
-## 目录结构
+## Repository layout
 
 ```
 QCL/
 ├── Cargo.toml              # workspace
 ├── crates/
-│   ├── mc-core/            # 纯数据模型: LaunchPlan, Instance, LogLine, CrashInfo
-│   ├── mc-ipc/             # JSON-RPC 2.0 类型 + 事件 + 行帧 codec
-│   ├── mc-plugin/          # L1 插件：清单/注册表/启停/镜像/launch hook
+│   ├── mc-core/            # pure data model: LaunchPlan, Instance, LogLine, CrashInfo
+│   ├── mc-ipc/             # JSON-RPC 2.0 types, events, line framing
+│   ├── mc-plugin/          # L1 plugins: manifest, registry, enable state, mirrors, launch hooks
 │   ├── mc-manager/         # manifest / version / rules / download / java / auth / install / launch
-│   ├── mc-wrapper/         # 进程宿主: spawn、stdio 泵、日志分级、崩溃检测
-│   ├── mc-tui/             # ratatui 界面：版本列表 / 过滤 / 进度 / 日志 / 帮助
-│   └── mc-cli/             # bin `qcl`
+│   ├── mc-wrapper/         # process host: spawn, stdio pumps, log levels, crash detection
+│   ├── mc-tui/             # ratatui UI: version list / filter / progress / logs / help
+│   └── mc-cli/             # `qcl` binary
 ├── plugins/
-│   └── bmclapi/plugin.toml # 示例镜像 provider
+│   └── bmclapi/plugin.toml # example mirror provider
 └── docs/
-    └── protocol.md         # IPC 协议定义
+    ├── plugins.md          # plugin manifest reference
+    └── protocol.md         # IPC protocol
 ```
 
-### 当前实现状态
+### Implementation status
 
-| 模块 | 状态 |
+| Area | Status |
 |---|---|
-| 版本清单拉取 + 磁盘缓存（离线回退） | ✅ |
-| version.json 解析、rules 求值、Maven 坐标 | ✅ |
-| 并发下载 + SHA-1 校验 + 原子写入 + 镜像回退 | ✅ |
-| client jar / libraries / natives 解压 / assets / log4j 配置 | ✅ |
-| log4j 控制台 XML → 纯文本改写（否则日志是一堆 `<log4j:Event>`） | ✅ |
-| Java 发现（启动器内自动下载 JRE） | 发现 ✅ / 下载 ⬜ |
-| 离线 Profile（`OfflinePlayer:` MD5 UUID） | ✅ |
-| LaunchPlan 组装（参数模板、legacy 兼容、`--dry-run`） | ✅ |
-| Wrapper：spawn、stdout/stderr 分流、日志分级、崩溃识别 | ✅ |
-| JSON-RPC 事件流（`--json`） | 类型 ✅ / daemon ⬜ |
-| Microsoft 登录（Device Code） | ⬜ M4 |
-| Mod Loader（Fabric/Forge/NeoForge） | ⬜ |
-| 插件注册表 + 启停（`plugins/state.json`） | ✅ |
-| L1 镜像 provider（BMCLAPI 示例） | ✅ |
-| L1 launch hook（JVM/游戏参数 + env） | ✅ |
-| L1 TUI 贡献（状态栏文字 / Actions / 快捷键） | ✅ |
-| L2 WASM 插件 | ⬜ |
-| 多实例注册表 | 读写 ✅ / CLI ⬜ |
-| TUI 全屏界面 | ✅ 三栏（VersionTable / 可编辑 cmdline / logs）/ 过滤 / 进度 / 鼠标 |
-| 服务端 PTY + 控制台 | ⬜ M6 |
+| Version manifest fetch + disk cache (offline fallback) | ✅ |
+| version.json parsing, rules evaluation, Maven coordinates | ✅ |
+| Concurrent downloads + SHA-1 + atomic writes + mirror fallback | ✅ |
+| client jar / libraries / natives extraction / assets / log4j config | ✅ |
+| log4j console XML → plain text rewrite (otherwise logs are `<log4j:Event>` blobs) | ✅ |
+| Java discovery (auto JRE download) | discovery ✅ / download ⬜ |
+| Offline profile (`OfflinePlayer:` MD5 UUID) | ✅ |
+| LaunchPlan assembly (argument templates, legacy support, `--dry-run`) | ✅ |
+| Wrapper: spawn, stdout/stderr split, log levels, crash detection | ✅ |
+| JSON-RPC event stream (`--json`) | types ✅ / daemon ⬜ |
+| Microsoft login (Device Code) | ⬜ M4 |
+| Mod loader (Fabric/Forge/NeoForge) | ⬜ |
+| Plugin registry + enable state (`plugins/state.json`) | ✅ |
+| L1 mirror providers (BMCLAPI example) | ✅ |
+| L1 launch hooks (JVM/game args + env) | ✅ |
+| L1 TUI contributions (status text / Actions / shortcuts) | ✅ |
+| L2 WASM plugins | ⬜ |
+| Instance registry | read/write ✅ / CLI ⬜ |
+| TUI full-screen UI | ✅ three panes (VersionTable / editable cmdline / logs) / filter / progress / mouse |
+| Server PTY + console | ⬜ M6 |
 
 ---
 
-## 里程碑
+## Milestones
 
-| 阶段 | 目标 | 状态 |
+| Phase | Goal | Status |
 |---|---|---|
-| M0 · headless | `qcl run <version>` 组装命令并拉起 java，日志直出 | ✅ |
-| M1 · 协议 | 事件流改成 JSON-RPC 行帧，`--json` 可用 | 🟡 CLI 已可用，daemon/attach 待做 |
-| M2 · CLI | `list / install / run / attach / kill / instance` | 🟡 前三个可用 |
-| M3 · TUI | 全屏界面：版本列表、下载进度、日志窗格 | ✅ |
-| M4 · 认证 | Microsoft Device Code，终端内完成 | ⬜ |
-| M5 · 插件 | L1 注册表/启停/镜像/launch hook → L2 WASM | 🟡 L1 完成 |
-| M6 · 服务端 | PTY + 控制台 + 看门狗 | ⬜ |
+| M0 · headless | `qcl run <version>` assembles the command and starts java, logs stream out | ✅ |
+| M1 · protocol | Event stream as JSON-RPC line frames, `--json` usable | 🟡 CLI usable, daemon/attach pending |
+| M2 · CLI | `list / install / run / attach / kill / instance` | 🟡 first three usable |
+| M3 · TUI | Full-screen version list, download progress, log pane | ✅ |
+| M4 · auth | Microsoft Device Code, completed inside the terminal | ⬜ |
+| M5 · plugins | L1 registry/enable/mirrors/launch hooks → L2 WASM | 🟡 L1 complete |
+| M6 · server | PTY + console + watchdog | ⬜ |
 
 ---
 
-## 已验证（本机 smoke test · 2026-10-31）
+## Verified (local smoke test · 2026-10-31)
 
-| 项 | 结果 |
+| Check | Result |
 |---|---|
-| `qcl list --limit 5` | ✅ 拉到 26.3 / 26.2 / 26.1.2 / 26.1.1 / 26.1 |
-| `qcl install 1.20.1` | ✅ 53 个库 + 3598 个 assets；BMCLAPI 镜像失败时自动回退官方源 |
-| `qcl run 1.20.1 --dry-run` | ✅ 生成完整 JVM + 游戏参数；JDK 21 版本检查通过 |
-| `qcl run 1.20.1`（真机） | ✅ 10 秒进主菜单：LWJGL 3.3.1、OpenAL、`Sound engine started` |
-| `qcl tui`（PTY 内） | ✅ 过滤 `1.20.1` → Enter 启动 → 主菜单 → PgUp 翻日志 → `s` 停止 → 退出码 0 |
-| TUI 鼠标 | ✅ 点击第 5 行 → `selected 26.1.1`；滚轮/帮助点击无 panic；`1006h` 鼠标上报已开启 |
-| 插件 CLI | ✅ `plugin list/info/enable/disable`，`state.json` 持久化 |
-| 插件 launch hook | ✅ 启用后 dry-run 出现 `-Dqcl.tweaks=1` / `--demo` / `QCL_HOOK=1`，禁用后消失 |
-| TUI Plugins | ✅ `[x]` → Space → `[ ]`，状态写入 state，LaunchPlan 重建 |
-| TUI 插件贡献 | ✅ 状态栏出现 `★ Steve`；按 `h` 执行 message；`Esc → Actions` 列出动作；停用后立即消失 |
-| Wrapper 假 java 测试 | ✅ stdout/stderr 分流、INFO/WARN/ERROR 分级、退出码、崩溃识别 |
-| `--json` 行帧 | ✅ 6 行事件全部可被 `json.loads` 逐行解析 |
+| `qcl list --limit 5` | ✅ fetched 26.3 / 26.2 / 26.1.2 / 26.1.1 / 26.1 |
+| `qcl install 1.20.1` | ✅ 53 libraries + 3598 assets; BMCLAPI failure falls back to the official source |
+| `qcl run 1.20.1 --dry-run` | ✅ full JVM + game arguments; JDK 21 version check passed |
+| `qcl run 1.20.1` (real machine) | ✅ main menu in 10s: LWJGL 3.3.1, OpenAL, `Sound engine started` |
+| `qcl tui` (PTY) | ✅ filter `1.20.1` → Enter → main menu → PgUp → `s` stop → exit code 0 |
+| TUI mouse | ✅ click row 5 → `selected 26.1.1`; wheel/help clicks no panic; SGR `1006h` enabled |
+| Plugin CLI | ✅ `plugin list/info/enable/disable`, `state.json` persisted |
+| Plugin launch hook | ✅ enabled dry-run shows `-Dqcl.tweaks=1` / `--demo` / `QCL_HOOK=1`; disabled it disappears |
+| TUI Plugins | ✅ `[x]` → Space → `[ ]`, state written, LaunchPlan rebuilt |
+| TUI plugin contributions | ✅ `★ Steve` in status bar; `h` runs message; `Esc → Actions` lists actions; disabled it disappears |
+| Wrapper fake-java test | ✅ stdout/stderr split, INFO/WARN/ERROR levels, exit code, crash detection |
+| `--json` framing | ✅ all 6 event lines parse with `json.loads` |
 | `cargo test --workspace` | ✅ 21 passed |
-| `cargo clippy --workspace --all-targets` | ✅ 无警告 |
+| `cargo clippy --workspace --all-targets` | ✅ no warnings |
 
 ---
 
-## 已知限制
+## Known limitations
 
-- 真机验证只在 Linux/Wayland + AMD 780M + JDK 21 上做过；Windows/macOS 未测
-- 离线模式下 authlib 会打一条 401 `player/attributes` 堆栈，属预期噪音
-- JDK 21 下 LWJGL 会提示 `Unsupported JNI version`，官方推荐 17，功能不受影响
-- 全量 assets 首次下载约 3600 个对象，耗时取决于镜像
-- 没有 daemon/attach：IPC 类型和协议已定义，CLI 仍是单进程直接 spawn
-- 没有 Microsoft 登录、Mod Loader、服务端 PTY
-- TUI 还没有实例（多开隔离）概念，只能按版本启动；目前同时只跑一个游戏
-- 终端被 SIGKILL / 直接关闭时，子 java 可能变孤儿；需要 pdeathsig/进程组（随 Windows 兼容一起做）
-- L2 WASM 插件、Java 运行时自动下载未实现
+- Real-machine validation was only done on Linux/Wayland + AMD 780M + JDK 21; Windows/macOS are untested
+- Offline mode logs a 401 `player/attributes` stack trace from authlib; expected noise
+- JDK 21 makes LWJGL print `Unsupported JNI version`; JDK 17 is recommended, functionality is unaffected
+- The first full asset download is ~3600 objects; duration depends on the mirror
+- No daemon/attach yet: IPC types and protocol are defined, but the CLI is still a single process that spawns directly
+- No Microsoft login, mod loader, or server PTY
+- The TUI has no instance (multi-instance isolation) concept yet; it launches by version and runs one game at a time
+- If the terminal is SIGKILLed or closed, the child java process may be orphaned; needs `pdeathsig`/process groups (alongside Windows support)
+- L2 WASM plugins and automatic Java runtime download are not implemented
 
 ---
 
-## 关键约束
+## Constraints
 
-- 不分发 Mojang 的 jar/assets
-- 不实现盗版登录接口；离线模式仅限本地/自用
-- 微软登录需自建 Azure 应用 client_id
-- 一切跨平台逻辑不经 shell，避免引号地狱
+- Never redistribute Mojang jars/assets
+- No piracy login endpoints; offline mode is for local/personal use only
+- Microsoft login requires your own Azure app `client_id`
+- Cross-platform logic avoids the shell to dodge quoting hell
 
 ## License
 
-GPL-3.0-or-later，见 [LICENSE](LICENSE)。
+GPL-3.0-or-later, see [LICENSE](LICENSE).
